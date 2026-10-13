@@ -72,10 +72,3 @@ model SiteContent {
   imageUrl  String?
   updatedAt DateTime @updatedAt
 }
-
-// Placeholder model used only to confirm the DB connection pipeline works
-// end-to-end. Safe to drop once real content exists.
-model HealthCheck {
-  id        Int      @id @default(autoincrement())
-  checkedAt DateTime @default(now())
-}
