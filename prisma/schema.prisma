@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum ArtworkStatus {
+  AVAILABLE
+  SOLD
+  ARCHIVED
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  artworks  Artwork[]
+}
+
+model Artwork {
+  id            Int           @id @default(autoincrement())
+  title         String
+  slug          String        @unique
+  description   String        @db.Text
+  provenance    String?       @db.Text
+  dateEra       String?
+  dimensions    String?
+  condition     String?
+  price         Decimal       @db.Decimal(10, 2)
+  dominantColor String?
+  oversized     Boolean       @default(false)
+  status        ArtworkStatus @default(AVAILABLE)
+  // "Tori's Favorites" — a hand-picked homepage selection, independent of
+  // category (an artwork keeps its normal category and can also be featured).
+  isFavorite    Boolean       @default(false)
+
+  categoryId Int?
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  images ArtworkImage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ArtworkImage {
+  id        Int     @id @default(autoincrement())
+  url       String
+  alt       String?
+  position  Int     @default(0)
+
+  artworkId Int
+  artwork   Artwork @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+}
+
+// Simple key-based editable content for pages that aren't artworks —
+// homepage hero, About text/image, and future pages (Contact, FAQ...).
+// This is the plain admin-form precursor to the fancier inline
+// click-to-edit UI planned for later.
+model SiteContent {
+  key       String   @id
+  title     String?
+  body      String?  @db.Text
+  imageUrl  String?
+  updatedAt DateTime @updatedAt
+}
+
+// Placeholder model used only to confirm the DB connection pipeline works
+// end-to-end. Safe to drop once real content exists.
+model HealthCheck {
+  id        Int      @id @default(autoincrement())
+  checkedAt DateTime @default(now())
+}
