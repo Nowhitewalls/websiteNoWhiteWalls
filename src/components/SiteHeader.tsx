@@ -113,7 +113,7 @@ export default function SiteHeader({
               top: 0,
               left: 0,
               bottom: 0,
-              width: "100%",
+              width: "90%",
               maxWidth: 420,
               zIndex: 20,
               background: theme.paper,
