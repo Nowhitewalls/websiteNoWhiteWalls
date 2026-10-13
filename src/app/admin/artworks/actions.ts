@@ -122,6 +122,62 @@ export async function deleteArtworkImage(formData: FormData) {
   redirect(`/admin/artworks/${artworkId}/edit`);
 }
 
+// Quick "add more photos" from the edit page's image strip — independent
+// of the rest of the form, so adding a photo never risks the text fields.
+export async function addArtworkImages(formData: FormData) {
+  await requireAdmin();
+  const artworkId = Number(formData.get("artworkId"));
+  const files = formData.getAll("images").filter((f): f is File => f instanceof File && f.size > 0);
+
+  const maxPosition = await prisma.artworkImage.aggregate({
+    where: { artworkId },
+    _max: { position: true },
+  });
+  let position = (maxPosition._max.position ?? -1) + 1;
+
+  const failures: string[] = [];
+  for (const file of files) {
+    try {
+      const url = await saveUploadedImage(file);
+      await prisma.artworkImage.create({ data: { artworkId, url, position: position++ } });
+    } catch (err) {
+      failures.push(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  if (failures.length > 0) {
+    redirect(`/admin/artworks/${artworkId}/edit?error=${encodeURIComponent(failures.join("; "))}`);
+  }
+  redirect(`/admin/artworks/${artworkId}/edit`);
+}
+
+// Swaps an image's position with its left/right neighbor — the reorder
+// arrows on the edit page's thumbnail strip.
+export async function moveArtworkImage(formData: FormData) {
+  await requireAdmin();
+  const imageId = Number(formData.get("imageId"));
+  const artworkId = Number(formData.get("artworkId"));
+  const direction = String(formData.get("direction"));
+
+  const images = await prisma.artworkImage.findMany({
+    where: { artworkId },
+    orderBy: { position: "asc" },
+  });
+  const index = images.findIndex((img) => img.id === imageId);
+  const swapWith = direction === "left" ? index - 1 : index + 1;
+
+  if (index >= 0 && swapWith >= 0 && swapWith < images.length) {
+    const a = images[index];
+    const b = images[swapWith];
+    await prisma.$transaction([
+      prisma.artworkImage.update({ where: { id: a.id }, data: { position: b.position } }),
+      prisma.artworkImage.update({ where: { id: b.id }, data: { position: a.position } }),
+    ]);
+  }
+
+  redirect(`/admin/artworks/${artworkId}/edit`);
+}
+
 // "Archive" — moves a sold piece out of the active Gallery into the
 // permanent back-catalogue. Distinct from deleteArtwork (full removal).
 export async function archiveArtwork(formData: FormData) {
