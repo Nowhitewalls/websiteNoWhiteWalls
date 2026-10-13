@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { archiveArtwork, deleteArtwork, toggleFavorite } from "./actions";
+import { archiveArtwork, deleteArtwork, toggleFavorite, togglePublished } from "./actions";
 import SiteHeader from "@/components/SiteHeader";
 
 export const dynamic = "force-dynamic";
@@ -12,8 +12,17 @@ const STATUS_LABEL: Record<string, string> = {
   ARCHIVED: "Archived",
 };
 
-export default async function ArtworksAdminPage() {
+const ERROR_MESSAGES: Record<string, string> = {
+  "publish-needs-price": "Can't publish without a price — add one first, or keep it as a draft.",
+};
+
+export default async function ArtworksAdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
   const session = await requireAdmin();
+  const { error } = await searchParams;
 
   const artworks = await prisma.artwork.findMany({
     orderBy: { createdAt: "desc" },
@@ -33,6 +42,10 @@ export default async function ArtworksAdminPage() {
             + New artwork
           </Link>
         </div>
+
+        {error && (
+          <p style={{ color: "#a33", fontSize: 14, marginBottom: 16 }}>{ERROR_MESSAGES[error] ?? error}</p>
+        )}
 
         {artworks.length === 0 && <p style={{ color: "#77716a" }}>No artworks yet.</p>}
 
@@ -63,14 +76,28 @@ export default async function ArtworksAdminPage() {
                 <div style={{ width: 56, height: 56, background: "#e8e4db", flexShrink: 0 }} />
               )}
               <div style={{ flex: 1 }}>
-                <div>{a.title}</div>
+                <div>
+                  {!a.published && (
+                    <span style={{ fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase", color: "#a33", border: "1px solid #a33", padding: "1px 6px", marginRight: 8 }}>
+                      Draft
+                    </span>
+                  )}
+                  {a.title}
+                </div>
                 <div style={{ fontSize: 13, color: "#77716a" }}>
-                  {a.category?.name ?? "No category"} · €{String(a.price)} · {STATUS_LABEL[a.status]}
+                  {a.category?.name ?? "No category"} · {a.price != null ? `€${String(a.price)}` : "No price"} · {STATUS_LABEL[a.status]}
                 </div>
               </div>
               <Link href={`/admin/artworks/${a.id}/edit`} style={{ color: "#56534e", fontSize: 13 }}>
                 Edit
               </Link>
+              <form action={togglePublished}>
+                <input type="hidden" name="id" value={a.id} />
+                <input type="hidden" name="current" value={String(a.published)} />
+                <button type="submit" style={{ background: "none", border: "none", color: "#56534e", fontSize: 13, cursor: "pointer" }}>
+                  {a.published ? "Unpublish" : "Publish"}
+                </button>
+              </form>
               <form action={toggleFavorite}>
                 <input type="hidden" name="id" value={a.id} />
                 <input type="hidden" name="current" value={String(a.isFavorite)} />

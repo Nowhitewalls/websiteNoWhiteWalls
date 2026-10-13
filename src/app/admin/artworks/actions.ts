@@ -27,7 +27,7 @@ function readArtworkFields(formData: FormData) {
     dateEra,
     dimensions,
     condition,
-    price: priceRaw ? Number(priceRaw) : 0,
+    price: priceRaw ? Number(priceRaw) : null,
     dominantColor,
     oversized,
     isFavorite,
@@ -101,6 +101,25 @@ export async function updateArtwork(formData: FormData) {
   if (failures.length > 0) {
     redirect(`/admin/artworks/${id}/edit?error=${encodeURIComponent(failures.join("; "))}`);
   }
+  redirect("/admin/artworks");
+}
+
+// Publishing requires a price (that's what actually goes live and gets
+// sold); saving/editing a draft never does. Unpublishing is always
+// allowed since it only ever removes something from public view.
+export async function togglePublished(formData: FormData) {
+  await requireAdmin();
+  const id = Number(formData.get("id"));
+  const current = String(formData.get("current")) === "true";
+
+  if (!current) {
+    const artwork = await prisma.artwork.findUnique({ where: { id }, select: { price: true } });
+    if (!artwork?.price) {
+      redirect("/admin/artworks?error=publish-needs-price");
+    }
+  }
+
+  await prisma.artwork.update({ where: { id }, data: { published: !current } });
   redirect("/admin/artworks");
 }
 

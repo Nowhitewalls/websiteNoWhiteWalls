@@ -83,7 +83,9 @@ export default async function ArtworkDetailPage({
               sold — only visible in the admin from that point on. */}
           {artwork.status === "AVAILABLE" && (
             <>
-              <p style={{ fontSize: 20, color: theme.ink, marginBottom: 20 }}>€{String(artwork.price)}</p>
+              <p style={{ fontSize: 20, color: theme.ink, marginBottom: 20 }}>
+                {artwork.price != null ? `€${String(artwork.price)}` : "Price not set"}
+              </p>
               <p style={{ fontSize: 13, color: theme.muted }}>
                 {artwork.oversized
                   ? "This piece is oversized — purchase enquiry coming soon."

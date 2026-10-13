@@ -22,7 +22,7 @@ export default async function GalleryPage({
 
   // Archived pieces have their own back-catalogue page (not built yet) —
   // the live Gallery only ever shows available and sold work.
-  const visibleWhere = { status: { in: ["AVAILABLE", "SOLD"] as ArtworkStatus[] } };
+  const visibleWhere = { status: { in: ["AVAILABLE", "SOLD"] as ArtworkStatus[] }, published: true };
 
   const [artworks, categoriesWithCounts] = await Promise.all([
     prisma.artwork.findMany({

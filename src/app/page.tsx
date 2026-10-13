@@ -16,7 +16,7 @@ export default async function HomePage() {
   const [hero, favorites] = await Promise.all([
     prisma.siteContent.findUnique({ where: { key: "homepage" } }),
     prisma.artwork.findMany({
-      where: { isFavorite: true, status: { in: ["AVAILABLE", "SOLD"] } },
+      where: { isFavorite: true, status: { in: ["AVAILABLE", "SOLD"] }, published: true },
       orderBy: { updatedAt: "desc" },
       take: 6,
       include: { images: { orderBy: { position: "asc" }, take: 1 } },

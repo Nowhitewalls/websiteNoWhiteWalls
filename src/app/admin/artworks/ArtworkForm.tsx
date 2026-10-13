@@ -90,14 +90,13 @@ export default function ArtworkForm({
         <label style={labelStyle}>Condition</label>
         <input name="condition" type="text" defaultValue={artwork?.condition ?? ""} style={inputStyle} />
 
-        <label style={labelStyle}>Price (€)</label>
+        <label style={labelStyle}>Price (€) — leave blank for a draft, required to publish</label>
         <input
           name="price"
           type="number"
           step="0.01"
           min="0"
-          required
-          defaultValue={artwork ? String(artwork.price) : ""}
+          defaultValue={artwork?.price != null ? String(artwork.price) : ""}
           style={inputStyle}
         />
 
