@@ -30,7 +30,10 @@ function SubmitButton() {
 
 export default function LoginForm() {
   const [state, formAction] = useFormState(login, undefined);
-  const [showPassword, setShowPassword] = useState(false);
+  // Visible by default — type="password" triggers Safari/iOS's Keychain
+  // overlay, which can block normal copy/paste and swallow taps on nearby
+  // buttons. Plain text avoids that; the toggle below can still mask it.
+  const [showPassword, setShowPassword] = useState(true);
 
   const inputStyle: React.CSSProperties = {
     width: "100%",
