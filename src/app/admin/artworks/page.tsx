@@ -26,7 +26,7 @@ export default async function ArtworksAdminPage({
 
   const artworks = await prisma.artwork.findMany({
     orderBy: { createdAt: "desc" },
-    include: { category: true, images: { orderBy: { position: "asc" }, take: 1 } },
+    include: { categories: true, images: { orderBy: { position: "asc" }, take: 1 } },
   });
 
   return (
@@ -85,7 +85,7 @@ export default async function ArtworksAdminPage({
                   {a.title}
                 </div>
                 <div style={{ fontSize: 13, color: "#77716a" }}>
-                  {a.category?.name ?? "No category"} · {a.price != null ? `€${String(a.price)}` : "No price"} · {STATUS_LABEL[a.status]}
+                  {a.categories.length > 0 ? a.categories.map((c) => c.name).join(", ") : "No category"} · {a.price != null ? `€${String(a.price)}` : "No price"} · {STATUS_LABEL[a.status]}
                 </div>
               </div>
               <Link href={`/admin/artworks/${a.id}/edit`} style={{ color: "#56534e", fontSize: 13 }}>

@@ -35,15 +35,15 @@ model Artwork {
   oversized     Boolean       @default(false)
   status        ArtworkStatus @default(AVAILABLE)
   // "Tori's Favorites" — a hand-picked homepage selection, independent of
-  // category (an artwork keeps its normal category and can also be featured).
+  // category (an artwork keeps its normal category(ies) and can also be featured).
   isFavorite    Boolean       @default(false)
   // Drafts (published: false) can be saved freely with missing fields —
   // only publishing itself requires a price. Public pages only ever show
   // published artworks.
   published     Boolean       @default(false)
 
-  categoryId Int?
-  category   Category? @relation(fields: [categoryId], references: [id])
+  // An artwork can live in more than one category at once.
+  categories Category[]
 
   images ArtworkImage[]
 

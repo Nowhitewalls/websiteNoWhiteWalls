@@ -19,7 +19,7 @@ export async function deleteCategory(formData: FormData) {
   await requireAdmin();
   const id = Number(formData.get("id"));
 
-  const artworkCount = await prisma.artwork.count({ where: { categoryId: id } });
+  const artworkCount = await prisma.artwork.count({ where: { categories: { some: { id } } } });
   if (artworkCount > 0) {
     redirect("/admin/categories?error=in-use");
   }

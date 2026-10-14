@@ -18,7 +18,10 @@ function readArtworkFields(formData: FormData) {
   const dominantColor = String(formData.get("dominantColor") ?? "").trim() || null;
   const oversized = formData.get("oversized") === "on";
   const isFavorite = formData.get("isFavorite") === "on";
-  const categoryIdRaw = String(formData.get("categoryId") ?? "").trim();
+  const categoryIds = formData
+    .getAll("categoryIds")
+    .map((v) => Number(v))
+    .filter((n) => Number.isFinite(n));
 
   return {
     title,
@@ -31,19 +34,19 @@ function readArtworkFields(formData: FormData) {
     dominantColor,
     oversized,
     isFavorite,
-    categoryId: categoryIdRaw ? Number(categoryIdRaw) : null,
+    categoryIds,
   };
 }
 
 export async function createArtwork(formData: FormData) {
   await requireAdmin();
-  const fields = readArtworkFields(formData);
+  const { categoryIds, ...fields } = readArtworkFields(formData);
   if (!fields.title) redirect("/admin/artworks/new?error=missing-title");
 
   const slug = slugify(fields.title) + "-" + Date.now().toString(36);
 
   const artwork = await prisma.artwork.create({
-    data: { ...fields, slug },
+    data: { ...fields, slug, categories: { connect: categoryIds.map((id) => ({ id })) } },
   });
 
   const files = formData.getAll("images").filter((f): f is File => f instanceof File && f.size > 0);
@@ -70,14 +73,14 @@ export async function createArtwork(formData: FormData) {
 export async function updateArtwork(formData: FormData) {
   await requireAdmin();
   const id = Number(formData.get("id"));
-  const fields = readArtworkFields(formData);
+  const { categoryIds, ...fields } = readArtworkFields(formData);
   const status = String(formData.get("status") ?? "AVAILABLE") as ArtworkStatus;
 
   if (!fields.title) redirect(`/admin/artworks/${id}/edit?error=missing-title`);
 
   await prisma.artwork.update({
     where: { id },
-    data: { ...fields, status },
+    data: { ...fields, status, categories: { set: categoryIds.map((catId) => ({ id: catId })) } },
   });
 
   const files = formData.getAll("images").filter((f): f is File => f instanceof File && f.size > 0);

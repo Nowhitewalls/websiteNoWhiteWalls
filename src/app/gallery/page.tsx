@@ -28,11 +28,11 @@ export default async function GalleryPage({
     prisma.artwork.findMany({
       where: {
         ...visibleWhere,
-        ...(category ? { category: { slug: category } } : {}),
+        ...(category ? { categories: { some: { slug: category } } } : {}),
         ...(color ? { dominantColor: color } : {}),
       },
       orderBy: { createdAt: "desc" },
-      include: { images: { orderBy: { position: "asc" }, take: 1 }, category: true },
+      include: { images: { orderBy: { position: "asc" }, take: 1 }, categories: true },
     }),
     prisma.category.findMany({
       where: { artworks: { some: visibleWhere } },

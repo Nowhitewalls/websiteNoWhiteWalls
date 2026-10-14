@@ -17,7 +17,7 @@ type ExistingArtwork = {
   oversized: boolean;
   isFavorite: boolean;
   status: string;
-  categoryId: number | null;
+  categories: { id: number }[];
   images: ExistingImage[];
 };
 
@@ -100,15 +100,23 @@ export default function ArtworkForm({
           style={inputStyle}
         />
 
-        <label style={labelStyle}>Category</label>
-        <select name="categoryId" defaultValue={artwork?.categoryId ?? ""} style={inputStyle}>
-          <option value="">— None —</option>
+        <label style={labelStyle}>Categories</label>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {categories.map((c) => (
-            <option key={c.id} value={c.id}>
+            <label key={c.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
+              <input
+                type="checkbox"
+                name="categoryIds"
+                value={c.id}
+                defaultChecked={artwork?.categories.some((ac) => ac.id === c.id)}
+              />
               {c.name}
-            </option>
+            </label>
           ))}
-        </select>
+          {categories.length === 0 && (
+            <p style={{ color: "#77716a", fontSize: 13 }}>No categories yet — add one in the backoffice first.</p>
+          )}
+        </div>
 
         <label style={labelStyle}>Dominant colour</label>
         <select name="dominantColor" defaultValue={artwork?.dominantColor ?? ""} style={inputStyle}>

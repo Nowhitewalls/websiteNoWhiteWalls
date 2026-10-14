@@ -22,7 +22,7 @@ export default async function EditArtworkPage({
   const [artwork, categories] = await Promise.all([
     prisma.artwork.findUnique({
       where: { id: Number(id) },
-      include: { images: { orderBy: { position: "asc" } } },
+      include: { images: { orderBy: { position: "asc" } }, categories: true },
     }),
     prisma.category.findMany({ orderBy: { name: "asc" } }),
   ]);

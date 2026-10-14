@@ -25,7 +25,7 @@ export default async function ArtworkDetailPage({
   const { slug } = await params;
   const artwork = await prisma.artwork.findUnique({
     where: { slug },
-    include: { images: { orderBy: { position: "asc" } }, category: true },
+    include: { images: { orderBy: { position: "asc" } }, categories: true },
   });
 
   if (!artwork || artwork.status === "ARCHIVED") notFound();
@@ -62,8 +62,10 @@ export default async function ArtworkDetailPage({
 
         <div>
           <h1 style={{ fontFamily: theme.fontSerif, fontWeight: "normal", fontSize: 28, color: theme.ink, margin: "0 0 4px" }}>{artwork.title}</h1>
-          {artwork.category && (
-            <p style={{ fontSize: 13, color: theme.muted, marginBottom: 20 }}>{artwork.category.name}</p>
+          {artwork.categories.length > 0 && (
+            <p style={{ fontSize: 13, color: theme.muted, marginBottom: 20 }}>
+              {artwork.categories.map((c) => c.name).join(", ")}
+            </p>
           )}
 
           {artwork.description && <p style={{ color: theme.ink, marginBottom: 24 }}>{artwork.description}</p>}
