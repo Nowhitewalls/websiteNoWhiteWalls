@@ -19,15 +19,26 @@ export function hashPassword(password: string, salt: string) {
   return scryptSync(password, salt, 64).toString("hex");
 }
 
+// Each admin account is a trio of env vars: ADMIN_USERNAME/SALT/HASH for the
+// first account, ADMIN2_USERNAME/SALT/HASH for the second, and so on. All
+// accounts have identical access — there's no role distinction.
+function adminAccounts() {
+  const accounts: { user: string; salt: string; hash: string }[] = [];
+  for (const suffix of ["", "2", "3", "4"]) {
+    const user = process.env[`ADMIN${suffix}_USERNAME`];
+    const salt = process.env[`ADMIN${suffix}_PASSWORD_SALT`];
+    const hash = process.env[`ADMIN${suffix}_PASSWORD_HASH`];
+    if (user && salt && hash) accounts.push({ user, salt, hash });
+  }
+  return accounts;
+}
+
 export function verifyCredentials(username: string, password: string) {
-  const expectedUser = process.env.ADMIN_USERNAME ?? "";
-  const salt = process.env.ADMIN_PASSWORD_SALT ?? "";
-  const expectedHash = process.env.ADMIN_PASSWORD_HASH ?? "";
-  if (!expectedUser || !salt || !expectedHash) return false;
-  if (username !== expectedUser) return false;
-  const gotHash = hashPassword(password, salt);
+  const account = adminAccounts().find((a) => a.user === username);
+  if (!account) return false;
+  const gotHash = hashPassword(password, account.salt);
   const a = Buffer.from(gotHash, "hex");
-  const b = Buffer.from(expectedHash, "hex");
+  const b = Buffer.from(account.hash, "hex");
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
