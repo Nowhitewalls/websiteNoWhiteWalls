@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Fraunces } from "next/font/google";
+import BfcacheReload from "@/components/BfcacheReload";
 
 // Inter: a widely-used, highly readable sans-serif for body text.
 // Fraunces: serif display face for titles/headings, as requested.
@@ -14,7 +15,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${fraunces.variable}`}>
-      <body style={{ margin: 0, fontFamily: "var(--font-sans), sans-serif" }}>{children}</body>
+      <body style={{ margin: 0, fontFamily: "var(--font-sans), sans-serif" }}>
+        <BfcacheReload />
+        {children}
+      </body>
     </html>
   );
 }

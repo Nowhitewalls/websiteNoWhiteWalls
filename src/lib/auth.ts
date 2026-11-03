@@ -3,7 +3,10 @@ import { redirect } from "next/navigation";
 import { createHmac, scryptSync, timingSafeEqual } from "crypto";
 
 const COOKIE_NAME = "nww_session";
-const SESSION_DAYS = 14;
+// Long-lived while the site is still in private build/preview — avoids
+// silent re-logins during this phase. Shorten this back down once the
+// site officially goes live.
+const SESSION_DAYS = 365;
 
 function secret() {
   const s = process.env.AUTH_SECRET;
