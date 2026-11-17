@@ -6,8 +6,9 @@ and push it with the rest of the work.
 
 ## Who you are working with
 
-- The person using Claude here is **not technical**. Speak **French**,
-  in plain everyday words. No jargon; if a technical word is unavoidable,
+- The person using Claude here is **not technical**. Speak **English**,
+  in plain everyday words (the technical owner may write in French; answer
+  each person in the language they use). No jargon; if a technical word is unavoidable,
   explain it in one short sentence.
 - Work **autonomously**. Make sensible technical decisions yourself and
   explain them briefly afterwards. Do not ask technical questions unless
