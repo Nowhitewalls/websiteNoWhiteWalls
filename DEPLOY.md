@@ -23,7 +23,43 @@ same app path.
    values from whoever already has server access, or from the daily backup
    at `/home6/smartfri/backups/nowhitewalls` on the server.
 
-## Deploying a change
+## Automatic deploy (GitHub Actions)
+
+`.github/workflows/deploy.yml` runs the manual steps below automatically
+every time something is merged into `main`. It can also be started by hand
+from the repo's **Actions** tab → "Deploy to o2switch" → **Run workflow**.
+It copies the files (never touching `.env`, `uploads/` or `node_modules/`
+on the server), runs `npm install` + `npm run build` on the server, restarts
+the app and checks the site returns `200`. Schema changes are **not**
+applied automatically; see "Schema changes" below.
+
+One-time setup, done from your own computer:
+
+1. Make a key used only for deploying (no passphrase):
+   ```
+   ssh-keygen -t ed25519 -f nww_deploy -N "" -C "github-actions-deploy"
+   ```
+2. Authorize the public half (`nww_deploy.pub`) on the server: cPanel →
+   **SSH Access** → Manage SSH Keys → Import Key, then **Authorize** it
+   (or append it to `~/.ssh/authorized_keys` on the `smartfri` account).
+3. Get the server's fingerprint:
+   ```
+   ssh-keyscan -p 22 109.234.160.22
+   ```
+4. On GitHub: repo **Settings → Secrets and variables → Actions → New
+   repository secret**, and add:
+   - `SSH_PRIVATE_KEY`: the full contents of the private file `nww_deploy`
+   - `SSH_KNOWN_HOSTS`: the output of step 3
+5. Delete the local `nww_deploy` private file afterwards (GitHub keeps the
+   encrypted copy). To revoke access later, remove the key in cPanel.
+
+If the "Check SSH connection" step times out, o2switch is likely blocking
+SSH from GitHub's servers (o2switch normally only allows SSH from IP
+addresses approved in cPanel). In that
+case ask o2switch support how to allow automated deploys, or keep deploying
+by hand.
+
+## Deploying a change by hand
 
 The server doesn't have its own git remote — code is copied over, then
 built in place.

@@ -1,0 +1,101 @@
+# Deploys the site to o2switch whenever something is merged into main
+# (or when started by hand from the GitHub "Actions" tab).
+# Mirrors the manual steps in DEPLOY.md: copy files -> build on server ->
+# restart the Passenger app -> check the site answers.
+#
+# Required GitHub secrets (Settings -> Secrets and variables -> Actions):
+#   SSH_PRIVATE_KEY  private half of a key made only for deploying
+#   SSH_KNOWN_HOSTS  output of: ssh-keyscan -p 22 109.234.160.22
+name: Deploy to o2switch
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Never run two deploys at the same time; finish the running one first.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  SSH_HOST: 109.234.160.22
+  SSH_USER: smartfri
+  SSH_PORT: "22"
+  APP_DIR: nowhitewalls.gallery/app
+  APP_ROOT_ABS: /home6/smartfri/nowhitewalls.gallery/app
+  NODE_VENV: /home6/smartfri/nodevenv/nowhitewalls.gallery/app/22/bin/activate
+  SITE_URL: https://nowhitewalls.gallery/
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          if [ -z "$SSH_PRIVATE_KEY" ] || [ -z "$SSH_KNOWN_HOSTS" ]; then
+            echo "::error::Secrets SSH_PRIVATE_KEY and SSH_KNOWN_HOSTS must be set (see DEPLOY.md)."
+            exit 1
+          fi
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<CFG
+          Host nww
+            HostName $SSH_HOST
+            User $SSH_USER
+            Port $SSH_PORT
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+            ConnectTimeout 20
+          CFG
+
+      - name: Check SSH connection
+        run: ssh nww 'echo "Connected to $(hostname)"'
+
+      - name: Copy files to server
+        # No --delete: files that only exist on the server (uploads, .env,
+        # node_modules, the current build) are never removed.
+        run: |
+          rsync -az --itemize-changes \
+            --exclude '.git/' --exclude '.github/' \
+            --exclude 'node_modules/' --exclude '.next/' \
+            --exclude '.env' --exclude '.env.*' \
+            --exclude 'uploads/' --exclude '*.log' \
+            -e ssh ./ "nww:$APP_DIR/"
+
+      - name: Install dependencies and build on server
+        run: |
+          ssh nww "set -e
+            source '$NODE_VENV'
+            cd '$APP_DIR'
+            npm install --no-audit --no-fund
+            npm run build"
+
+      - name: Restart the app
+        run: |
+          ssh nww "pkill -9 -f '[P]assenger NodeApp: $APP_ROOT_ABS' || true
+            cloudlinux-selector start --json --interpreter nodejs --user '$SSH_USER' --app-root '$APP_DIR'"
+
+      - name: Check the site is up
+        run: |
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$SITE_URL" || true)
+            echo "Attempt $i: HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 10
+          done
+          echo "::error::Site did not return 200 after deploy."
+          exit 1
+
+      - name: Remove SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
