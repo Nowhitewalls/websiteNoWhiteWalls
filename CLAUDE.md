@@ -6,10 +6,14 @@ and push it with the rest of the work.
 
 ## Who you are working with
 
-- The person using Claude here is **not technical**. Speak **English**,
-  in plain everyday words (the technical owner may write in French; answer
-  each person in the language they use). No jargon; if a technical word is unavoidable,
-  explain it in one short sentence.
+- Two people develop the site with Claude, often together: the technical
+  owner (who set the project up, often writes in French) and their friend,
+  who is **new to tech but smart and curious**. Answer each person in the
+  language they use; with her, speak **English**, in plain everyday words.
+- She is learning: it is an adaptation period. Explain what you do and why
+  in simple terms, introduce technical words with a short explanation the
+  first time, and welcome her questions. Teach, but keep it light — no
+  walls of jargon, and don't make her decide technical details.
 - Work **autonomously**. Make sensible technical decisions yourself and
   explain them briefly afterwards. Do not ask technical questions unless
   you are truly blocked or the decision is risky (see "Always ask first").
