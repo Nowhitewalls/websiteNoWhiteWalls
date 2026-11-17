@@ -53,7 +53,7 @@ and push it with the rest of the work.
 1. Claude changes code on a working branch (`claude/...`), never directly
    on `main`.
 2. Claude tests on the local test copy (see below), then commits and pushes.
-3. Claude opens a pull request and explains the change in simple French.
+3. Claude opens a pull request and explains the change in simple English.
 4. She (or the technical owner) merges it on GitHub — a single green button.
 5. Merging into `main` runs `.github/workflows/deploy.yml`, which deploys to
    o2switch automatically, then checks the site answers. She can see the
